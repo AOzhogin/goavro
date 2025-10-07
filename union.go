@@ -126,13 +126,30 @@ func unionBinaryFromNative(cr *codecInfo) func(buf []byte, datum interface{}) ([
 			return longBinaryFromNative(buf, index)
 		case map[string]interface{}:
 			if len(v) != 1 {
-				return nil, fmt.Errorf("cannot encode binary union: non-nil Union values ought to be specified with Go map[string]interface{}, with single key equal to type name, and value equal to datum value: %v; received: %T", cr.allowedTypes, datum)
+				typeName := fmt.Sprintf("%T", datum)
+				if strings.Contains(typeName, "map[") {
+					typeName = "map"
+				}
+				c, ok := cr.codecFromName[typeName]
+				if !ok {
+					return nil, fmt.Errorf("cannot encode binary union: datum value: %v; received: %T", cr.allowedTypes, datum)
+				}
+				return c.binaryFromNative(buf, datum)
+				//return nil, fmt.Errorf("cannot encode binary union: non-nil Union values ought to be specified with Go map[string]interface{}, with single key equal to type name, and value equal to datum value: %v; received: %T", cr.allowedTypes, datum)
 			}
 			// will execute exactly once
 			for key, value := range v {
 				index, ok := cr.indexFromName[key]
 				if !ok {
-					return nil, fmt.Errorf("cannot encode binary union: no member schema types support datum: allowed types: %v; received: %T", cr.allowedTypes, datum)
+					typeName := fmt.Sprintf("%T", datum)
+					if strings.Contains(typeName, "map[") {
+						typeName = "map"
+					}
+					c, ok := cr.codecFromName[typeName]
+					if !ok {
+						return nil, fmt.Errorf("cannot encode binary union: datum value: %v; received: %T", cr.allowedTypes, datum)
+					}
+					return c.binaryFromNative(buf, datum)
 				}
 				c := cr.codecFromIndex[index]
 				buf, _ = longBinaryFromNative(buf, index)
