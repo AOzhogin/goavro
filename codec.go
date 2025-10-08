@@ -270,6 +270,7 @@ func NewCodecForUnambiguousJSON(schemaSpecification string) (*Codec, error) {
 		buildCodecForTypeDescribedByMap,
 		buildCodecForTypeDescribedByString,
 		buildCodecForTypeDescribedBySliceUnambiguousJSON,
+		DefaultCodecOption(),
 	})
 }
 
