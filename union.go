@@ -173,6 +173,12 @@ func unionBinaryFromNative(cr *codecInfo) func(buf []byte, datum interface{}) ([
 				return c.binaryFromNative(buf, value)
 			}
 		default:
+			if cr.unambiguousMode && cr.isNullable() && cr.numConcreteTypes() == 1 {
+				c := cr.firstConcreteTypeCodec()
+				index := cr.indexFromName[c.typeName.fullName]
+				buf, _ = longBinaryFromNative(buf, index)
+				return c.binaryFromNative(buf, datum)
+			}
 			return nil, fmt.Errorf("cannot encode binary union: datum value: %v; received: %T", cr.allowedTypes, datum)
 		}
 
